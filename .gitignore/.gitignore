@@ -1,0 +1,826 @@
+
+#BIT PLANE SLICING 
+clc;clear;close all; 
+#we first read the image whose operation is to performed 
+a=imread('lionp.PNG'); 
+#image(a); 
+#[X,cmap]=imread('lionp.PNG') 
+#imshow(X,cmap); 
+#conversion of rgb image to gray 
+I =rgb2gray(a); 
+[m,n]=size(I); 
+b=double(I); 
+c=de2bi(b); 
+c1=c(:,1); 
+r1=reshape(c1,m,n); 
+c2=c(:,2); 
+r2=reshape(c2,m,n); 
+c3=c(:,3); 
+r3=reshape(c3,m,n); 
+c4=c(:,4); 
+r4=reshape(c4,m,n); 
+c5=c(:,5); 
+r5=reshape(c5,m,n); 
+c6=c(:,6); 
+r6=reshape(c6,m,n); 
+c7=c(:,7); 
+r7=reshape(c7,m,n);
+
+
+
+c8=c(:,8); 
+r8=reshape(c8,m,n); 
+subplot(2,4,1); 
+imshow(r1); 
+title('1st bit plane'); 
+subplot(2,4,2); 
+imshow(r2); 
+title('2nd bit plane'); 
+subplot(2,4,3); 
+imshow(r3); 
+title('3rd bit plane'); 
+subplot(2,4,4); 
+imshow(r4); 
+title('4th bit plane'); 
+subplot(2,4,5); 
+imshow(r5); 
+title('5th bit plane'); 
+subplot(2,4,6); 
+imshow(r6); 
+title('6th bit plane'); 
+subplot(2,4,7); 
+imshow(r7); 
+title('7th bit plane'); 
+subplot(2,4,8); 
+imshow(r8); 
+title('8th bit plane');
+
+
+
+
+
+
+
+
+
+
+Histogram equalization 
+clc;clear;close all; 
+#we first formed the image with a pixel value given below 
+a=[52 55 61 59 79 61 76 61; 
+62 59 55 104 94 85 59 71; 
+63 65 66 113 144 104 63 72; 
+64 70 70 126 154 109 71 69; 
+67 73 68 106 122 88 68 68; 
+68 79 60 70 77 66 58 75; 
+69 85 64 58 55 61 65 83;
+
+
+
+70 87 69 68 65 73 78 90]; 
+b=size(a); 
+a=double(a); 
+% Loop for Getting the Histogram of the image 
+hist1 = zeros(1,256); 
+for i=1:b(1) 
+for j=1:b(2) 
+for k=0:255 
+if a(i,j)==k 
+hist1(k+1)=hist1(k+1)+1; 
+end 
+end 
+end 
+end 
+%Generating PDF out of histogram by diving by total no. of pixels 
+pdf=(1/(b(1)*b(2)))*hist1; 
+%Generating CDF out of PDF 
+cdf = zeros(1,256); 
+cdf(1)=pdf(1); 
+for i=2:256 
+cdf(i)=cdf(i-1)+pdf(i); 
+end 
+cdf = round(255*cdf); 
+ep = zeros(b); 
+for i=1:b(1) %loop tracing the rows of image 
+for j=1:b(2) %loop tracing thes columns of image t=(a(i,j)+1); %pixel values in image 
+ep(i,j)=cdf(t); %Making the ouput image using cdf as the transformation function 
+end 
+end 
+% Loop for Getting the Histogram of the image 
+hist2 = zeros(1,256); 
+for i=1:b(1) 
+for j=1:b(2) 
+for k=0:255 
+if ep(i,j)==k 
+hist2(k+1)=hist2(k+1)+1; 
+end 
+end 
+end 
+end
+subplot(2,2,1); 
+imshow(uint8(a)); 
+subplot(2,2,3); 
+imshow(uint8(ep)); 
+subplot(2,2,2); 
+stem(hist1); 
+subplot(2,2,4); 
+stem(hist2);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Histogram specification 
+clc; clear all; close all; 
+%histogram specification 
+A = [1 3 5; 4 4 3; 5 2 2]; 
+level = [0 1 2 3 4 5 6 7]; 
+pixels = zeros(1,9); 
+for i = 1:7 
+for j = 1:9 
+if A(j) == level(i) 
+pixels(i) = pixels(i) + 1; 
+end 
+end 
+end 
+pixels = pixels(1:8); 
+cdf = zeros(1,8); 
+cdf(1) = pixels(1); 
+for i = 2:8 
+cdf(i) = cdf(i-1) + pixels(i); 
+end 
+input_equ = round(cdf*7./9); 
+target = [0 0 0 0 2 2 4 1]; 
+cdf_t = zeros(1,8); 
+cdf_t(1) = target(1); 
+for i = 2:8 
+cdf_t(i) = cdf_t(i-1) + target(i); 
+end 
+target_equ = round(cdf_t*7./9);
+
+
+
+map = zeros(1,8); 
+j = 1; 
+for i = 1:8 
+for j = 1:8 
+if input_equ(i) <= target_equ(j) 
+map(i) = level(j); 
+break; 
+end 
+end 
+end
+
+
+Histogram stretching 
+clc;clear;close all; 
+%Histogram streching 
+Bmin = 20; 
+Bmax = 255; 
+A = imread(’lionp.PNG’); 
+A_gray = rgb2gray(A); 
+[row col] = size(A_gray); % Size of gray image 
+len = row * col; % Total number of pixels 
+A_vec = A_gray(:); % Vectorinzing the matrix 
+A_sort = sort(A_vec); % Sorting the values in ascending values 
+A_unq = unique(A_sort); % Finding unique values 
+Amin = min(A_unq); 
+Amax = max(A_unq); 
+% Slope 
+Slope = (Bmax-Bmin)./(Amax-Amin); 
+B_new = Slope.*(A_unq-Amin)+Bmin; 
+% Stretching 
+A_stretched = zeros(row,col); 
+for jj = 1:length(A_unq) 
+A_stretched(A_gray == A_unq(jj)) = B_new(jj); 
+end 
+A_stretched = uint8(A_stretched); 
+figure; 
+subplot(2,2,1) 
+imshow(A_gray) 
+title(’Original’)
+
+
+
+subplot(2,2,2) 
+imshow(A_stretched) 
+title(’After Stretching’) 
+subplot(2,2,3) 
+histogram(A_gray) 
+title(’Histogram for Original Image’) 
+subplot(2,2,4) 
+histogram(A_stretched) 
+title(’Histogram after Stretching’)
+
+
+
+Watermarking 
+clc; clear all; close all; 
+%watermarking 
+%% Taking Input Images 
+Image = rgb2gray(imread('Albert.png')); 
+Image = imresize(Image, 0.5); 
+imshow(Image); 
+WaterMark = imread('Sign.png'); 
+WaterMark = padarray(WaterMark, 213, 0,'pre'); 
+%% Performing Bit Slicing 
+Image_Bit_Sliced = bitand(Image, 248); %% Taking first 5 MSB bits 
+WaterMark_Bit_Sliced = bitsrl(WaterMark, 5); %% Taking first 3 MSB bits 
+Final_Image = bitor(Image_Bit_Sliced, WaterMark_Bit_Sliced); 
+figure(1); 
+imshow(Final_Image); 
+% Recovering the watermark 
+Recovered_Water_Mark = bitsll(Final_Image, 5); 
+figure(2); 
+imshow(Recovered_Water_Mark); 
+%% Performing DWT2 
+[cAI, cHI, cVI, cDI] = dwt2(Image, 'haar'); 
+[cAWM, cHWM, cVWM, cDWM] = dwt2(WaterMark, 'haar'); 
+cA = 0.8*cAI + 0.2*cAWM; 
+Final_Watermarked_Image = idwt2(cA, cHI, cVI, cDI, 'haar'); 
+figure(3); 
+imshow(uint8(Final_Watermarked_Image)); 
+% Recovering the watermark 
+[cA, cH, cV, cD] = dwt2(Final_Watermarked_Image, 'haar'); 
+cA = (cA - 0.8*cAI)/0.2;
+
+
+
+Final_Recovered_Image = idwt2(cA, cHWM, cVWM, cDWM, 'haar'); 
+figure(4); 
+imshow(uint8(Final_Recovered_Image));
+
+
+
+Contrast enhancement 
+clc; close all; clear all; 
+%contrast enhancement 
+%% Image input and and Grad operator 
+Grad = [12 14 23 13; 14 11 21 18; 21 24 23 13; 12 21 20 10]; 
+image = [4 4 3 2; 3 7 6 1; 2 7 6 2; 0 1 0 2]; 
+New_M = zeros(4,4); 
+%% Algorithm 
+for i = 1:4 
+for j = 1:4 
+min_value = Grad(i,j); 
+x = i; 
+y = j; 
+if(i+1 <= 4 && Grad(i+1,j) < min_value) 
+min_value = Grad(i+1,j); 
+x = i+1; 
+y = j; 
+end 
+if(i-1 >= 1 && Grad(i-1,j) < min_value) 
+min_value = Grad(i-1,j); 
+x = i-1; 
+y = j; 
+end 
+if(j-1 >= 1 && Grad(i,j-1) < min_value) 
+min_value = Grad(i,j-1); 
+y = j - 1; 
+x = i; 
+end 
+if(j+1 <= 4 && Grad(i,j+1) < min_value) 
+min_value = Grad(i,j+1); 
+y = j + 1; 
+x = i; 
+end 
+if(j+1 <= 4 && i+1 <= 4 && Grad(i+1,j+1) < min_value) 
+min_value = Grad(i+1,j+1); 
+y = j+1; 
+x = i+1;
+
+
+
+end 
+if(j-1>= 1 && i+1 <= 4 && Grad(i+1,j-1) <min_value) 
+min_value = Grad(i+1,j-1); 
+y = j-1; 
+x = i+1; 
+end 
+if(j + 1 <= 4 && i - 1 >= 1 && Grad(i-1,j+1) < min_value) 
+min_value = Grad(i-1,j+1); 
+y = j + 1; 
+x = i - 1; 
+end 
+New_M(i,j) = image(x,y); 
+end 
+end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Compression using dct. 
+clc;clear all;close all 
+[x,y] = uigetfile('*.jpg*','select the grayscale image'); % here x=filename;y=pathname filewithpath=strcat(y,x); 
+img_temp =imread(filewithpath); 
+original_image=img_temp; 
+img=original_image; 
+%checking for colored image 
+imgr = rgb2gray(original_image); 
+figure 
+imshow(img) 
+title('original image') 
+imwrite(img,'org.jpg') 
+data= size(img,2); 
+samples_divide_eighth =(data /8); 
+coloumn_8 = []; 
+for colour=1:3 %color layer 
+for i=1:size(img,1) 
+rowwise = dct(double(img(i,:,colour))); 
+coloumn_8(i,:,colour)= idct(rowwise(1:samples_divide_eighth),data); 
+endfor 
+endfor
+
+
+
+dat_2 =size(img,1); 
+samplesEighth=floor(dat_2/8); 
+coloumn_8f=[]; 
+for k=1:3 %all color layer 
+for i=1:size(img,2) %all coloumn 
+DCT_8 = dct(double(coloumn_8(:,i,k))); 
+coloumn_8f(:,i,k)= idct(DCT_8(1:samplesEighth),dat_2); 
+endfor 
+endfor 
+dct_1 =(uint8(coloumn_8)); 
+%dct_1=rgb2gray(dct_1); 
+figure 
+imshow(dct_1) 
+title('COMPRESSED IMAGE'); 
+imwrite(dct_1,'OUT.jpg')
+
+
+
+Run length encoding 
+clc; clear;close all; 
+%run length encoding 
+clc; 
+clear all; 
+close all; 
+%Near neighbhourhood 
+%% Input test image 
+A = imread('lionp.png'); 
+A = rgb2gray(A); 
+imshow(A); 
+title('Original Image'); 
+%% Padding zeros to image matrix 
+H = size(I,1); 
+W = size(I,2); 
+padded_img = [zeros(H,1),I,zeros(H,1)]; 
+padded_img = [zeros(1,W+2);padded_img;zeros(1,W+2)]; 
+%% Near Neighbourhood Algorithm 
+image_new = zeros(H,W); 
+for row = 1:H 
+for col = 1:W
+
+
+
+row_init = row+1; 
+col_init = col+1; 
+curr_pix = padded_img(row_init,col_init); 
+new_pix = 1*(curr_pix<padded_img(row_init,col_init+1))+... 
+2*(curr_pix<padded_img(row_init-1,col_init+1))+... 
+4*(curr_pix<padded_img(row_init-1,col_init))+... 
+8*(curr_pix<padded_img(row_init-1,col_init-1))+... 
+16*(curr_pix<padded_img(row_init,col_init-1))+... 
+32*(curr_pix<padded_img(row_init+1,col_init-1))+... 
+64*(curr_pix<padded_img(row_init+1,col_init))+... 
+128*(curr_pix<padded_img(row_init+1,col_init+1)); 
+image_new(row,col) = new_pix; 
+end 
+end 
+image_new = uint8(image_new); 
+%% Plotting 
+figure(2); 
+imshow(image_new); 
+title('Image After Applying Algorithm'); 
+%Get input vector 
+vector = randi([0 1],1,100); 
+stm = sprintf('%d', vector); 
+fprintf("Original Input String: %s\n",stm); 
+d = my_RLE(vector); 
+fprintf('Run length encoded output:\n'); 
+d' 
+len_output = length(d); 
+len_input = length(vector); 
+%Check for compression ratio 
+if (len_output / len_input) <1 
+fprintf('Positive Compression with ratio = %.2d\n', len_output / len_input) 
+else 
+fprintf('Negative compression.') 
+end
+
+
+
+
+
+
+Perform various arithmetic operations on the image 
+clc;clear;close all; 
+#we first read the image whose operation is to performed 
+a=imread('lionp.PNG'); 
+figure 
+subplot(2,4,1);
+
+
+
+image(a); 
+title('orignal image'); 
+#we perform a addition operation; 
+A = a+60; 
+subplot(2,4,2); 
+image(A); 
+title('addition'); 
+#we perform a subtraction operation; 
+B = a-100; 
+subplot(2,4,3); 
+image(B); 
+title('subtraction'); 
+#we perform a multiply operation; 
+C = a.*2; 
+subplot(2,4,4); 
+image(C); 
+title('multiply'); 
+#we perform a divide operation; 
+D = a./2; 
+subplot(2,4,5); 
+image(D); 
+title('divide'); 
+# load another image whose operation is to be performed 
+I = imread('crying.jpg'); 
+subplot(2,4,6); 
+image(I); 
+title('second image'); 
+#resizing the image 
+[r,c,z]=size(I); 
+I1 = imresize(D,[r c]); 
+subplot(2,4,7); 
+image(I1); 
+title('resized image'); 
+#perform a addition operation; 
+figure 
+Ir = I+I1; 
+subplot(2,4,1); 
+image(Ir); 
+#perform a subtraction operation; 
+Im =I1-I;
+subplot(2,4,2); 
+image(Im); 
+#perform a multiply operation; 
+It = I.*I1; 
+subplot(2,4,3); 
+image(It); 
+#perform a divide operation; 
+Id = I.*I1; 
+subplot(2,4,4); 
+image(Id);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Designing filter 
+clc;clear;close all; 
+%designing filter 
+%% Import the Image 
+image = imread('Lenna.jpg'); 
+image = imresize(image, 0.5); 
+image = rgb2gray(image); 
+figure(1); 
+imshow(image); 
+%% Filter Designing 
+hpf = [-1,-1,-1;-1,8,-1;-1,-1,-1]; 
+%This is a simple Laplacian Mask (Ref : Sridhar, Chapter : Image Enhancement) 
+lpf = [1,1,1;1,1,1;1,1,1] .* (1/9); 
+%This is a averaging filter mask (Ref : Sridhar, Chapter : Image Enhancement) %% Applying the Filters 
+I_hpf = conv2(image,hpf); 
+I_lpf = conv2(image,lpf); 
+figure(2); 
+subplot(121); imshow(uint8(I_hpf)); 
+subplot(122); imshow(uint8(I_lpf));
+
+
+
+
+
+
+
+
+
+
+
+
+
+Edge detection  
+clc; clear all; close all; 
+%edge detection 
+%% Import the Image 
+A = imread('Lenna.jpg'); 
+A = imresize(A, 0.5); 
+A = rgb2gray(A); 
+figure(1); 
+imshow(A); 
+%% Edges using DWT2 
+[cA, cH, cV, cD] = dwt2(A,'haar'); 
+figure(2); 
+subplot(221); imshow(uint8(cA)); 
+subplot(222); imshow(uint8(cH)); 
+subplot(223); imshow(uint8(cV)); 
+subplot(224); imshow(uint8(cD)); 
+%% Edges using Canny 
+Canny = edge(A,'canny'); 
+figure(3); 
+imshow(Canny); 
+title("Edges using Canny"); 
+%% Edges using Sobel 
+Sobel = edge(A,'sobel'); 
+figure(4); 
+imshow(Sobel); 
+title("Edges using Sobel");
+
+
+
+
+
+
+
+
+
+Zig zag Dct_coefficient 
+clc; clear all; close all; 
+%zig zag dct_coeff. 
+%% Initialising the variables
+
+
+
+image = rgb2gray(imread('Lenna.jpg')); 
+vmax = size(image, 1); 
+hmax = size(image, 2); 
+vmin = 1; 
+hmin = 1; 
+v = vmin; 
+h = hmin; 
+output = zeros(1, vmax*hmax); 
+%% Algorithm for zig zag pattern 
+i = 1; 
+while ((v <= vmax) && (h <= hmax)) 
+if (mod(h + v, 2) == 0) % going up 
+if (v == vmin) 
+output(i) = image(v, h); % if we got to the first line if (h == hmax) 
+v = v + 1; 
+else 
+h = h + 1; 
+end 
+i = i + 1; 
+elseif ((h == hmax) && (v < vmax)) % if we got to the last column output(i) = image(v, h); 
+v = v + 1; 
+i = i + 1; 
+elseif ((v > vmin) && (h < hmax)) % all other cases 
+output(i) = image(v, h); 
+v = v - 1; 
+h = h + 1; 
+i = i + 1; 
+end 
+else % going down 
+if ((v == vmax) && (h <= hmax)) % if we got to the last line output(i) = image(v, h); 
+h = h + 1; 
+i = i + 1; 
+elseif (h == hmin) % if we got to the first column output(i) = image(v, h); 
+if (v == vmax) 
+h = h + 1; 
+else 
+v = v + 1; 
+end 
+i = i + 1; 
+elseif ((v < vmax) && (h > hmin)) % all other cases
+output(i) = image(v, h); 
+v = v + 1; 
+h = h - 1; 
+i = i + 1; 
+end 
+end 
+if ((v == vmax) && (h == hmax)) % bottom right element 
+output(i) = image(v, h); 
+break 
+end 
+end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Near neighbourhood. 
+clc; 
+clear all; 
+close all; 
+%Near neighbhourhood 
+%% Input test image 
+A = imread('lionp.png'); 
+A = rgb2gray(A); 
+imshow(A); 
+title('Original Image'); 
+%% Padding zeros to image matrix 
+H = size(I,1); 
+W = size(I,2); 
+padded_img = [zeros(H,1),I,zeros(H,1)]; 
+padded_img = [zeros(1,W+2);padded_img;zeros(1,W+2)]; 
+%% Near Neighbourhood Algorithm 
+image_new = zeros(H,W); 
+for row = 1:H 
+for col = 1:W 
+row_init = row+1; 
+col_init = col+1; 
+curr_pix = padded_img(row_init,col_init); 
+new_pix = 1*(curr_pix<padded_img(row_init,col_init+1))+... 
+2*(curr_pix<padded_img(row_init-1,col_init+1))+... 
+4*(curr_pix<padded_img(row_init-1,col_init))+... 
+8*(curr_pix<padded_img(row_init-1,col_init-1))+... 
+16*(curr_pix<padded_img(row_init,col_init-1))+...
+
+
+
+32*(curr_pix<padded_img(row_init+1,col_init-1))+... 
+64*(curr_pix<padded_img(row_init+1,col_init))+... 
+128*(curr_pix<padded_img(row_init+1,col_init+1)); 
+image_new(row,col) = new_pix; 
+end 
+end 
+image_new = uint8(image_new); 
+%% Plotting 
+figure(2); 
+imshow(image_new); 
+title('Image After Applying Algorithm');
+
+
+
+Rgb component
+clc; 
+clear all; 
+close all; 
+%Red green blue component 
+image = imread('lionp.png'); 
+red = image; 
+red(:,:,2) = 0; 
+red(:,:,3) = 0; 
+green = image; 
+green(:,:,1) = 0; 
+green(:,:,3) = 0; 
+blue = image; 
+blue(:,:,1) = 0; 
+blue(:,:,2) = 0; 
+imshow(image) 
+figure(1) 
+imshow(red) 
+figure(2) 
+imshow(green) 
+figure(3) 
+imshow(blue)
+
+
+
+
+
+
+Perform a basic operation in dip  
+clear all; 
+close all; 
+clc; 
+%perform the basic operation of dip 
+%% Reading an input image 
+% Read Color image 
+image=double((imread('tulip.jpeg'))); 
+% Read Grayscale image 
+%image=double((imread('cameraman.bmp'))); 
+%% Computing the size of an image 
+[m1,n1,dim]=size(image); 
+z=min(m1,n1); 
+if(dim>2) 
+display('Loaded image is coloured ') 
+else 
+display('Loaded image is grayscale '); 
+end 
+%% Selection of threshold value for DCT coefficients 
+% For coloured image in this tutorial we used thresh value of 5,50 and 500 % for generating images shown in Figs. 3(b)-(d) respectively. 
+% For grayscale images in this tutorial we used thresh value of 10,60 and 100 % for generating images shown in Figs. 4(b)-(d) respectively. 
+prompt = 'Enter the threshold value? '; 
+thresh = input(prompt); 
+%% For colored images 
+if(dim==3) 
+%% Resize the image to make it square 
+image_square=(imresize(image,[z z])); 
+%% Compute the size of a square image 
+[m2,n2]=size(image_square);
+%% Calculation the DCT basis matrix 
+for i=1:m2 
+for j=1:m2 
+if(i==1) 
+z(i,j)=sqrt(1/n2)*cos(((2*j-1)*(i-1)*pi)/(2*n2)); 
+else 
+z(i,j)=sqrt(2/n2)*cos(((2*j-1)*(i-1)*pi)/(2*n2)); 
+end 
+end 
+end 
+%% Calculate the DCT coefficents for each RGB components of an image 
+DCT_red=z*image_square(:,:,1)*z'; 
+DCT_green=z*image_square(:,:,2)*z'; 
+DCT_blue=z*image_square(:,:,3)*z'; 
+%% Truncating the DCT coefficients to achieve compression for each channel 
+DCT_red(abs(DCT_red)<thresh)=0; 
+DCT_green(abs(DCT_green)<thresh)=0; 
+DCT_blue(abs(DCT_blue)<thresh)=0; 
+DCT(:,:,1)=DCT_red; 
+DCT(:,:,2)=DCT_green; 
+DCT(:,:,3)=DCT_blue; 
+%% Reconstruction of the compresed image from each channel 
+image_compressed(:,:,1)=z'*DCT_red*z; 
+image_compressed(:,:,2)=z'*DCT_green*z; 
+image_compressed(:,:,3)=z'*DCT_blue*z; 
+imwrite(uint8(image_compressed),'Compressed_image_coloured.jpeg'); %% Compression ratio 
+data_orig=imfinfo('tulip.jpeg'); 
+original_file_size=data_orig.FileSize; 
+data_comp=imfinfo('Compressed_image_coloured.jpeg'); 
+compressed_file_size=data_comp.FileSize; 
+Compression_ratio=floor(original_file_size/compressed_file_size);
+%% Plotting the results 
+imshow(uint8(image_square)),title('Original image'); 
+figure; 
+imshow(uint8(image_compressed)),title('Compressed image'); 
+%% Putting the images in the directory 
+imwrite(uint8(image_square),'original_image_colored.jpeg'); imwrite(uint8(image_compressed),'Compressed_image_coloured.jpeg'); 
+else 
+%% Computing the size of an image 
+[m1,n1]=size(image); 
+z=min(m1,n1); 
+%% Resize the image to make it square 
+image_square=(imresize(image,[z z])); 
+%% Compute the size of a square image 
+[m2,n2]=size(image_square); 
+%% Calculation the DCT basis matrix 
+for i=1:m2 
+for j=1:n2 
+if(i==1) 
+z(i,j)=sqrt(1/n2)*cos(((2*j-1)*(i-1)*pi)/(2*n2)); 
+else 
+z(i,j)=sqrt(2/n2)*cos(((2*j-1)*(i-1)*pi)/(2*n2)); 
+end 
+end 
+end 
+%% Calculate the DCT coefficents for the image 
+DCT=z*image_square*z'; 
+%% Truncating the DCT coefficients to achieve compression DCT(abs(DCT)<thresh)=0; 
+%% Reconstruction of the compresed image 
+Compressed_image=z'*DCT*z;
